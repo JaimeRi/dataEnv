@@ -1,0 +1,82 @@
+digraph {
+
+    {
+    node[shape="hexagon", color=red, penwidth=2.0]
+    out_DistanceCrow;out_DistanceFish;out_EnvStats;out_EnvAtPoint;out_ESALC;
+    out_PointsDam_Distance
+    }
+
+    { 
+    node[shape="ellipse"]
+    proc_BasinID;proc_BasinID;proc_OrderSlopeCalc_Prep;proc_ExtractAtPoint;
+    proc_snapping_Prep;proc_DistanceCrow;proc_DistanceFish;proc_PerBASIN_Env_Prep;
+    proc_OrderSlopeCalc_Prep;proc_MicrobasinLayer_Prep;proc_EnvStats_Calc;
+    proc_Extract_ESALC;proc_DAMsubset;proc_DAMsnapping;proc_DAMdistance 
+    }
+
+    {  
+    node[shape="box"]
+    dat_pointBasin;dat_HighResEnv;dat_HighResEnv;dat_LowResEnv;dat_snapped;
+    dat_PerBASIN_Env;dat_OrderSlope;dat_MicrobasinLayer;dat_ESALC;dat_DAMpoints;
+    dat_DAMsubset;dat_DAMsnapped
+    }
+
+
+dat_point -> proc_BasinID 
+proc_BasinID -> dat_pointBasin
+
+dat_HighRes -> dat_HighResEnv [color=blue];
+dat_HighResEnv -> proc_PerBASIN_Env_Prep 
+dat_HighResEnv -> proc_OrderSlopeCalc_Prep 
+
+
+dat_LowRes -> dat_LowResEnv [color=blue];
+dat_LowResEnv -> proc_ExtractAtPoint 
+
+dat_pointBasin -> proc_snapping_Prep
+proc_snapping_Prep -> dat_snapped
+dat_snapped -> proc_DistanceCrow
+dat_snapped -> proc_DistanceFish
+proc_DistanceCrow -> out_DistanceCrow
+proc_DistanceFish -> out_DistanceFish
+
+dat_pointBasin -> proc_PerBASIN_Env_Prep
+proc_PerBASIN_Env_Prep -> dat_PerBASIN_Env
+
+dat_pointBasin -> proc_OrderSlopeCalc_Prep 
+proc_OrderSlopeCalc_Prep -> dat_OrderSlope
+
+dat_pointBasin -> proc_MicrobasinLayer_Prep
+proc_MicrobasinLayer_Prep -> dat_MicrobasinLayer
+
+dat_OrderSlope -> proc_EnvStats_Calc
+dat_PerBASIN_Env -> proc_EnvStats_Calc
+
+proc_EnvStats_Calc -> out_EnvStats
+
+dat_pointBasin -> proc_ExtractAtPoint
+proc_ExtractAtPoint -> out_EnvAtPoint
+
+dat_ESALC -> proc_Extract_ESALC
+dat_MicrobasinLayer -> proc_Extract_ESALC
+
+proc_Extract_ESALC -> out_ESALC
+
+dat_DAMpoints -> proc_DAMsubset
+proc_DAMsubset -> dat_DAMsubset
+dat_DAMsubset -> proc_DAMsnapping
+proc_DAMsnapping -> dat_DAMsnapped
+dat_snapped -> proc_DAMdistance
+dat_DAMsnapped -> proc_DAMdistance
+proc_DAMdistance -> out_PointsDam_Distance
+
+dat_point[label="Initial Point Dataset\n (IDs and Coords)",shape="box", 
+    style=rounded, penwidth=3.0]
+
+dat_LowRes[label="- TERRA\l- GIA\l- Nitrogen input\l",
+    shape=plaintext, fontcolor=blue, fontsize=11]
+
+dat_HighRes[label="- Elevation\l- Flow accumulation\l- Slope\l- Stream order\l",
+    shape=plaintext, fontcolor=blue, fontsize=11]
+
+}
