@@ -1,11 +1,11 @@
 #! /bin/bash
 
-export tmp=/mnt/shared/tmp
+export tmp=/mnt/shared/tiles_tb/tmp
 export out=/mnt/shared/tiles_tb
 export zip=/mnt/shared/EnvTablesTiles
 export layers=/mnt/shared/gpfs/gibbs/pi/hydro/hydro/dataproces/ENVTABLES
 
-TransposeTable_Hydro90m(){
+TransposeTable_LandCover(){
 
 # define the tile to work with
 nm=${1}
@@ -39,7 +39,7 @@ do
     # identify table of interest
     tb=$(find ${layers}/CU_${ru} -name "stats_${ru}_LCprop.txt")
 
-    # subset the table with subcatchment id and column of interest
+    # subset the table with subcatchment id and columns of interest
     flds=$(head -n1 $tb | tr ' ' '\n' | grep -ne "^${var}" \
          | cut -d: -f1 | paste -sd,)
 
@@ -54,8 +54,23 @@ do
 
 done
 
-zip -jq $zip/LandCover/${var}/${nm}_${var}.zip \
-    ${tmp}/${nm}_${var}.txt
+years=($(echo {1992..2020}))
+time for i in ${!years[@]}
+do
+    col=$(echo "$i + 2" | bc)
+    y="${years[$i]}"
+    cut -d' ' -f1,"${col}"  ${tmp}/${nm}_${var}.txt \
+        > $tmp/${nm}_${var}_${y}.txt
+
+    TOT=$(awk '{sum+=$2}END{print sum}' $tmp/${nm}_${var}_${y}.txt)
+
+    [[ "$TOT" -eq 0  ]] && continue
+
+    zip -jq $zip/LandCover/${var}/${nm}_${var}_${y}.zip \
+    $tmp/${nm}_${var}_${y}.txt
+
+    rm $tmp/${nm}_${var}_${y}.txt
+done
 
 wc -l < ${tmp}/${nm}_${var}.txt >> $out/valid/${nm}_${var}.txt
 
@@ -70,16 +85,18 @@ echo "${nm} ${var} done" >> $tmp/landcover_tiles_done.txt
 
 
 # list of variables:
-# bio1-19   source:/mnt/shared/regional_unit_bio 
 tile=(h18v02 h20v02 h18v04 h20v04)
-var=(bio1)
+tile=(h18v02)
+var=(c60)
 
 for t in ${tile[@]}
 do
     for i in ${var[@]}
                 do echo $t $i 
     done 
-done > $tmp/tbtrans_bf.txt
+done > $tmp/landcover_trans.txt
 
-export -f TransposeTable_CHELSA_f
-time parallel -j 4 --colsep ' ' TransposeTable_CHELSA_f ::::  $tmp/tbtrans_bf.txt
+export -f TransposeTable_LandCover
+time parallel -j 1 --colsep ' ' TransposeTable_LandCover ::::  $tmp/landcover_trans.txt
+
+awk '{total+=$1; print $1,total}' h18v04_c60.txt

@@ -22,11 +22,16 @@ tbids=( $(find /mnt/shared/tiles_tb/indx -name "${nm}_*.txt") )
 # create output table with header
 echo "subcID min max range mean sd" > ${tmp}/${nm}_${var}.txt
 
+# validate table
+echo "${nm}_${var}" > $out/valid/${nm}_${var}.txt
+
 # for loop to go through each RU and extract the ids of interest
 for i in ${tbids[@]}
 do
     # if file is empty go to next one
     [[ ! -s $i ]] && continue
+
+   wc -l < $i >> $out/valid/${nm}_${var}.txt 
 
     # extract ru number
     ru=$(basename $i .txt | awk -F_ '{print $2}')
@@ -35,21 +40,25 @@ do
     tb=$(find ${layers}/CU_${ru}/out -name "stats_${ru}_${var}.txt")
     
     # retrieve only records with IDs of interest
-    awk 'NR==FNR {a[$1]; next} FNR > 1 || $1 in a' \
+    awk 'NR==FNR {a[$1]; next} $1 in a' \
      ${i} $tb >> ${tmp}/${nm}_${var}.txt
 done
 
 zip -jq $zip/Hydrography90m/${var}/${nm}_${var}.zip \
     ${tmp}/${nm}_${var}.txt
 
+wc -l < ${tmp}/${nm}_${var}.txt >> $out/valid/${nm}_${var}.txt
+
 rm ${tmp}/${nm}_${var}.txt
+
+echo "${nm} ${var} done" >> $out/hydro_tiles_done.txt
 
 }
 
 # list of variables:
 # bio1-19   source:/mnt/shared/regional_unit_bio 
 tile=(h18v02 h20v02 h18v04 h20v04)
-var=(flowpos)
+var=(flowpos spi slopgrad)
 
 for t in ${tile[@]}
 do
@@ -60,4 +69,8 @@ do
 done > $tmp/tbtrans_hydro.txt
 
 export -f TransposeTable_Hydro90m
-time parallel -j 8 --colsep ' ' TransposeTable_Hydro90m ::::  $tmp/tbtrans_hydro.txt
+time parallel -j 12 --colsep ' ' TransposeTable_Hydro90m ::::  $tmp/tbtrans_hydro.txt
+
+
+
+ awk '{total+=$1}{print $1,total}' $out/valid/h18v02_flowpos.txt

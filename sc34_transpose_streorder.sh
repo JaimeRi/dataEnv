@@ -68,8 +68,8 @@ echo "${nm} ${var} done" >> $tmp/streamorder_tiles_done.txt
 ### make sure the folders for each variable exist
 
 # list of variables:
-tile=(h18v04)
-var=(length)
+tile=(h20v02 h18v02 h20v04 h18v04)
+var=(length sinusoid)
 
 for t in ${tile[@]}
 do
@@ -80,4 +80,6 @@ do
 done > $tmp/tbtrans_streamorder.txt
 
 export -f TransposeTable_streamorder
-time parallel -j 2 --colsep ' ' TransposeTable_streamorder ::::  $tmp/tbtrans_streamorder.txt
+time parallel -j 8 --colsep ' ' TransposeTable_streamorder ::::  $tmp/tbtrans_streamorder.txt
+
+awk 'NR > 1 {total+=$1; print $1,total}' h18v02_length.txt

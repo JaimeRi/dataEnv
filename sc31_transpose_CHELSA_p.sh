@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export tmp=/mnt/shared/tmp
+export tmp=/mnt/shared/tiles_tb/tmp
 export out=/mnt/shared/tiles_tb
 export zip=/mnt/shared/EnvTablesTiles
 export biop=/mnt/shared/regional_unit_bio
@@ -30,7 +30,7 @@ do
     # if file is empty go to next one
     [[ ! -s $i ]] && continue
 
-    wc -l < $i >> $out/valid/${nm}_${var}.txt 
+    #wc -l < $i >> $out/valid/${nm}_${var}.txt 
 
     # extract ru number
     ru=$(basename $i .txt | awk -F_ '{print $2}')
@@ -50,7 +50,7 @@ zip -jq $zip/Climate/present/${var}/${nm}_${var}.zip ${tmp}/${nm}_${var}.txt
 
 rm ${tmp}/${nm}_${var}.txt
 
-echo "${nm} ${var} done" >> $tmp/biop_tiles_done.txt
+echo "${nm} ${var} done" >> $out/biop_tiles_done.txt
 
 }
 
@@ -63,6 +63,16 @@ do
     do echo $tile $var 
     done
 done > $tmp/tbtrans.txt 
+
+
+#for tile in h20v02 h18v02 h20v04 h18v04 
+#do
+#    for var in bio1 bio12 bio15
+#    do echo $tile $var 
+#    done
+#done > $tmp/tbtrans.txt 
+
+
 
 export -f TransposeTable_CHELSA_p
 time parallel -j 20 --colsep ' ' TransposeTable_CHELSA_p ::::  $tmp/tbtrans.txt
